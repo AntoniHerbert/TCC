@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container{
+            display: flex;
+            flex-direction: row;
+        }
+        
+        .upper{
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        
+        .lower{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #myVideo{
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Selecione a fonte do vídeo:</h1>
+    <button onclick="redirectToPage('webcam')">Usar Webcam</button>
+    <button onclick="redirectToPage('upload')">Upload</button>
+    
+    <script>
+        function redirectToPage(source) {
+            if (source === 'webcam') {
+                // Redireciona para a página de seleção de área em vídeo com o parâmetro 'source'
+                window.location.href = 'pagina2.html?source=' + source;
+            } else if (source === 'upload') {
+                // Redireciona para a página3.html
+                window.location.href = 'pagina3.html';
+            }
+        }
+    </script>
+</body>
+</html>
