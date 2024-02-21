@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify
 from flask_cors import CORS
 import shutil
 import os
@@ -33,22 +33,22 @@ def initialize():
 initialize()
 # Página inicial com formulário para upload de vídeo
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        if 'videoFile' in request.files:
-            video = request.files['videoFile']
-            video.filename = 'meu_video.mp4'
-            # Salva o vídeo no diretório de uploads
-            video.save(os.path.join(app.config['VIDEO_UPLOAD_FOLDER'], video.filename))
-            # Redireciona para a página de pré-visualização, passando o nome do arquivo como parâmetro
-            return redirect(url_for('preview', filename=video.filename))
-    return render_template('index.html')
+@app.route('/initialize', methods=['POST'])
+def initialize_folders():
+    initialize()
+    return jsonify({"message": "Pastas inicializadas com sucesso."}), 200
 
-# Página de pré-visualização do vídeo
-@app.route('/preview/<filename>')
-def preview(filename):
-    return render_template('preview.html', filename=filename)
+@app.route('/', methods=['POST'])
+def index():
+    if 'videoFile' in request.files:
+        video = request.files['videoFile']
+        video.filename = 'meu_video.mp4'
+        # Salva o vídeo no diretório de uploads
+        video.save(os.path.join(app.config['VIDEO_UPLOAD_FOLDER'], video.filename))
+        return jsonify({"message": "Vídeo enviado com sucesso!"}), 200
+    else:
+        return jsonify({"error": "Nenhum arquivo de vídeo enviado."}), 400
+
 
 # Endpoint para servir o vídeo armazenado
 @app.route('/get-video')
@@ -83,4 +83,4 @@ def random_number():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)

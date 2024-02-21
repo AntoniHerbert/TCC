@@ -34,6 +34,32 @@
     <button onclick="redirectToPage('upload')">Upload</button>
     
     <script>
+
+function initializeFolders() {
+    fetch('http://localhost:5000/initialize', {
+        method: 'POST',
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro ao inicializar as pastas.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Pastas inicializadas com sucesso:', data.message);
+    })
+    .catch(error => {
+        console.error('Erro ao inicializar as pastas:', error);
+    });
+}
+
+
+        // Chama a função para inicializar as pastas quando a página for carregada
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFolders();
+});
+
+
         function redirectToPage(source) {
             if (source === 'webcam') {
                 // Redireciona para a página de seleção de área em vídeo com o parâmetro 'source'
