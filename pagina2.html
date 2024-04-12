@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Seleção de Área em Vídeo</title>
+<link rel="stylesheet" href="style.css">
 <style>
     #video-container {
         position: relative;
@@ -39,17 +40,10 @@
         background-color: rgba(0, 0, 0, 0); /* Transparente */
         pointer-events: none; /* A área selecionada não deve responder aos eventos do mouse */
     }
-
-    #select-area-button {
-        position: absolute;
-        bottom: 10px;
-        left: 10px;
-        padding: 10px;
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        cursor: pointer;
+    #over{
+        display: inline-block;
     }
+    
 </style>
 </head>
 <body>
@@ -65,9 +59,9 @@
     </div>
     <div class="selected-area" id="selected-area"></div>
 </div>
-<button id="select-area-button">Selecionar Área</button>
 <canvas id="myChart"></canvas>
 
+<button id="select-area-button">Selecionar Área</button>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const video = document.getElementById('video');
