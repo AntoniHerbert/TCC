@@ -1,0 +1,26 @@
+@charset "UTF-8";
+
+
+body{
+    width: 100vw;  /* Largura total da janela */
+    height: 100vh; /* Altura total da janela */
+    margin: 0;
+    position: relative;     /* Remove margens */
+    overflow: hidden;
+    background: linear-gradient(to bottom, #685e44, white);
+}
+
+button {
+    background-color: gray;  /* Cor de fundo cinza */
+    color: white;            /* Cor do texto branca */
+    border: none;            /* Remove a borda padrão */
+    border-radius: 8px;     /* Cantos arredondados */
+    padding: 10px 20px;     /* Espaçamento interno */
+    font-size: 14px;        /* Tamanho da fonte */
+    cursor: pointer;         /* Cursor de ponteiro ao passar sobre o botão */
+    transition: background-color 0.3s; /* Efeito de transição na cor de fundo */
+}
+
+button:hover {
+    background-color: darkgray; /* Cor de fundo ao passar o mouse */
+}

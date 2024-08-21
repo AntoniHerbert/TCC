@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+
+        body{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #myVideo{
+            width: 100%;
+            height: 100%;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            height: auto; 
+            justify-content: center;
+        }
+
+        button {
+            margin-bottom: 10%; /* Espaçamento de 5% da altura */
+            width: 100%; /* Os botões ocuparão a mesma largura dentro do container */
+            text-align: center;
+        }
+
+        button:last-child {
+            margin-bottom: 0; /* Remove margem inferior do último botão */
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+    <button id = "botao1" onclick="redirectToPage('webcam')">Usar Webcam</button>
+    <button id = "botao2" onclick="redirectToPage('upload')">Upload</button>
+    </div>
+
+    <script>
+
+function initializeFolders() {
+    fetch('http://localhost:5000/initialize', {
+        method: 'POST',
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro ao inicializar as pastas.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Pastas inicializadas com sucesso:', data.message);
+    })
+    .catch(error => {
+        console.error('Erro ao inicializar as pastas:', error);
+    });
+}
+
+
+        // Chama a função para inicializar as pastas quando a página for carregada
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFolders();
+});
+
+
+        function redirectToPage(source) {
+            if (source === 'webcam') {
+                // Redireciona para a página de seleção de área em vídeo com o parâmetro 'source'
+                window.location.href = 'pagina2.html?source=' + source;
+            } else if (source === 'upload') {
+                // Redireciona para a página3.html
+                window.location.href = 'pagina3.html';
+            }
+        }
+    </script>
+</body>
+</html>

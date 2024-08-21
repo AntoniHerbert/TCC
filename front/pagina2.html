@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seleção de Área em Vídeo</title>
+<link rel="stylesheet" href="style.css">
+<style>
+    .grid-container {
+    display: grid;
+    height: 100vh;
+    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: repeat(1, 1fr);
+    align-items: start;
+    justify-items: center;
+    gap: 7.5%; /* Distância entre os elementos */
+}
+    .container{
+        display: flex;
+        flex-direction: row;
+        height: 100vh;
+        /* margin: 0 auto; */
+        /* align-items: center; */
+        justify-content: center;
+        gap: 10vw;
+
+    }
+    
+    .video-container {
+        position: relative;
+        height: 80vh;
+        width: 35vw;
+        top: 10vh;
+        overflow: visible;
+
+        /* width: 35%; Largura do vídeo
+        aspect-ratio: 9/16; Altura do vídeo
+        overflow: hidden;
+        grid-row: 1/2; */
+    }
+
+    
+    .myChart {
+        position: relative;
+        width: 40vw;
+        height: 60vh;
+        top: 10vh;
+        /* position:fixed; */
+
+         /* Fundo preto com 80% de transparência */
+        overflow: visible;
+        /* grid-row: 2/3; */
+    }
+
+    #myChart {
+        position: relative;
+        width: 40vw;
+        height: 60vh;
+        /* position:fixed; */
+
+        background-color: rgba(0, 0, 0, 0.4); /* Fundo preto com 80% de transparência */
+        overflow: visible;
+        /* grid-row: 2/3; */
+    }
+
+    #video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%; /* Ajuste para ocupar todo o contêiner */
+        height: 100%; /* Ajuste para ocupar todo o contêiner */
+        object-fit:cover; /* Garante que o vídeo ocupe todo o espaço disponível */
+    }
+
+    .mask {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 100%; /* Largura do vídeo */
+        height: 100%; /* Altura do vídeo */
+    }
+
+    .mask .top, .mask .bottom, .mask .left, .mask .right {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.5); /* Paralelogramo preto semi-transparente */
+    }
+
+    .selected-area {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0); /* Transparente */
+        pointer-events: none; /* A área selecionada não deve responder aos eventos do mouse */
+    }
+   #select-area-button{
+    position: absolute;
+        top: 80%;
+        right: 10vw;
+        
+   }
+
+    /* button{
+        position: absolute;
+        top: 80%;
+        left: 10%;
+
+    } */
+    
+</style>
+<script src="saveSelectedArea.js"></script>
+<script src="fetchDataAndUpdateChart.js"></script>
+<script src="getVideo.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- hello mundo -->
+         <div class="video-container" >
+            <video id="video" autoplay></video>
+            <div class="mask" id="mask">
+                <div class="top"></div>
+                <div class="bottom"></div>
+                <div class="left"></div>
+                <div class="right"></div>
+                
+            </div>
+            <div class="selected-area" id="selected-area"></div>
+        </div>
+        <div class="myChart">
+        <canvas id="myChart"></canvas> 
+        </div>
+        <button id="select-area-button">Selecionar Área</button>
+
+
+         <!-- <div class="grafico">grafico</div> -->
+
+
+        <!-- <div id="video-container">
+        <video id="video" autoplay>
+        
+        </video>
+        <div class="mask" id="mask">
+        <div class="top"></div>
+        <div class="bottom"></div>
+        <div class="left"></div>
+        <div class="right"></div>
+        </div>
+         -->
+    </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const video = document.getElementById('video');
+    const mask = document.getElementById('mask');
+    const selectedArea = document.getElementById('selected-area');
+    const selectAreaButton = document.getElementById('select-area-button');
+
+    let isSelectingArea = false;
+    let startX, startY, endX, endY;video
+    let counter = 0;
+
+    function onMouseDown(e) {42.5
+        if (isSelectingArea) {
+            startX = e.clientX - mask.getBoundingClientRect().left; // Ajusta para o posicionamento relativo à máscara
+            startY = e.clientY - mask.getBoundingClientRect().top; // Ajusta para o posicionamento relativo à máscara
+            document.addEventListener('mousemove', onMouseMove);
+            saveSelectedArea(counter); // Chamada para salvar a área selecionada
+        }
+    }video
+
+    function onMouseMove(e) {
+        endX = e.clientX - mask.getBoundingClientRect().left; // Ajusta para o posicionamento relativo à máscara
+        endY = e.clientY - mask.getBoundingClientRect().top; // Ajusta para o posicionamento relativo à máscara
+
+        const minX = Math.min(startX, endX);
+        const minY = Math.min(startY, endY);
+        const maxX = Math.max(startX, endX);
+        const maxY = Math.max(startY, endY);
+
+        selectedArea.style.left = minX + 'px';
+        selectedArea.style.top = minY + 'px';
+        selectedArea.style.width = (maxX - minX) + 'px';
+        selectedArea.style.height = (maxY - minY) + 'px';
+        
+        // Atualiza a posição e o tamanho dos paralelogramos
+        mask.querySelector('.top').style.height = minY + 'px';
+        mask.querySelector('.top').style.width = '100%';
+        mask.querySelector('.top').style.left = '0';
+        mask.querySelector('.bottom').style.top = maxY + 'px';
+        mask.querySelector('.bottom').style.height = (mask.clientHeight - maxY) + 'px';
+        mask.querySelector('.bottom').style.width = '100%';
+        mask.querySelector('.bottom').style.left = '0';
+        mask.querySelector('.left').style.top = minY + 'px';
+        mask.querySelector('.left').style.bottom = (mask.clientHeight - maxY) + 'px';
+        mask.querySelector('.left').style.width = minX + 'px';
+        mask.querySelector('.left').style.left = '0';
+        mask.querySelector('.right').style.top = minY + 'px';
+        mask.querySelector('.right').style.bottom = (mask.clientHeight - maxY) + 'px';
+        mask.querySelector('.right').style.left = maxX + 'px';
+        mask.querySelector('.right').style.width = (mask.clientWidth - maxX) + 'px';
+    }
+
+    function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        if (isSelectingArea) {
+            mask.style.pointerEvents = 'none';
+            selectAreaButton.style.display = 'block';
+            isSelectingArea = false;
+        }
+    }
+
+    selectAreaButton.addEventListener('click', () => {
+        isSelectingArea = !isSelectingArea;
+        if (isSelectingArea) {
+            mask.style.pointerEvents = 'auto';
+            selectAreaButton.style.display = 'none';
+        } else {
+            mask.style.pointerEvents = 'none';
+            selectAreaButton.style.display = 'block';
+        }
+    });
+
+    mask.addEventListener('mousedown', onMouseDown);
+    mask.addEventListener('mouseup', onMouseUp);
+
+    window.addEventListener('resize', () => {
+    const rect = mask.getBoundingClientRect();
+
+    // Atualiza a posição da área selecionada
+    const minX = Math.min(startX, endX);
+    const minY = Math.min(startY, endY);
+    const maxX = Math.max(startX, endX);
+    const maxY = Math.max(startY, endY);
+
+    selectedArea.style.left = minX + 'px';
+    selectedArea.style.top = minY + 'px';
+    selectedArea.style.width = (maxX - minX) + 'px';
+    selectedArea.style.height = (maxY - minY) + 'px';
+
+    // Atualiza a posição e o tamanho dos paralelogramos
+    mask.querySelector('.top').style.height = minY + 'px';
+    mask.querySelector('.top').style.width = '100%';
+    mask.querySelector('.top').style.left = '0';
+    mask.querySelector('.bottom').style.top = maxY + 'px';
+    mask.querySelector('.bottom').style.height = (mask.clientHeight - maxY) + 'px';
+    mask.querySelector('.bottom').style.width = '100%';
+    mask.querySelector('.bottom').style.left = '0';
+    mask.querySelector('.left').style.top = minY + 'px';
+    mask.querySelector('.left').style.bottom = (mask.clientHeight - maxY) + 'px';
+    mask.querySelector('.left').style.width = minX + 'px';
+    mask.querySelector('.left').style.left = '0';
+    mask.querySelector('.right').style.top = minY + 'px';
+    mask.querySelector('.right').style.bottom = (mask.clientHeight - maxY) + 'px';
+    mask.querySelector('.right').style.left = maxX + 'px';
+    mask.querySelector('.right').style.width = (mask.clientWidth - maxX) + 'px';
+});
+
+
+    
+
+    // Recupera o vídeo do servidor
+    getVideo();
+
+
+    const data = [];
+    const dataLimit = 50; // Limite de pontos no gráfico
+    let xValue = 0; // Variável para rastrear o valor de x
+
+    // Função para adicionar um novo ponto ao final dos dados
+    
+
+    const ctx = document.getElementById('myChart');
+
+    var grafico1 = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                
+                borderColor: "blue",
+                borderWidth: 1,
+                radius: 0,
+                data: data,
+            },]
+        },
+        options: {
+            animation: {
+                duration: 0 // Desativando a animação para a adição de dados
+            },
+            interaction: {
+                intersect: false
+            },
+            plugins: {
+                legend: false
+            },
+            scales: {
+                y: {
+                    grid:{
+                        color: 'rgba(255,255,255)'
+                    },
+                    ticks: {
+                        color: 'white' // Números da escala Y em branco
+                    },
+                    border: {
+                        color: 'white' // Borda do eixo X em branco
+                    }
+                },
+                x: {
+                    type: 'linear',
+                    grid: {
+                        display:false
+                    },
+                    ticks: {
+                        color: 'white' // Números da escala Y em branco
+                    },
+                    border: {
+                        color: 'white' // Borda do eixo X em branco
+                    }
+                }
+            }
+        }
+    });
+    // Adiciona um novo ponto aleatório a cada 33 milissegundos (aproximadamente 30 vezes por segundo)
+   
+</script>
+</body>
+</html>

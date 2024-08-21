@@ -4,6 +4,8 @@ import shutil
 import os
 import random
 import time
+import d_computeareaframe
+import cv2
 
 app = Flask(__name__)
 
@@ -18,6 +20,9 @@ VIDEO_UPLOAD_FOLDER = 'video_uploads'
 DATA_UPLOAD_FOLDER = 'data_uploads'
 app.config['VIDEO_UPLOAD_FOLDER'] = VIDEO_UPLOAD_FOLDER
 app.config['DATA_UPLOAD_FOLDER'] = DATA_UPLOAD_FOLDER
+app.config['IMAGE_PREFIX'] = 'image_'
+app.config['IMAGE_SUFFIX'] = '.png'
+app.config['START_INDEX'] = 0
 
 def initialize():
     # Remove o conteúdo da pasta data_uploads
@@ -29,6 +34,19 @@ def initialize():
     if os.path.exists(VIDEO_UPLOAD_FOLDER):
         shutil.rmtree(VIDEO_UPLOAD_FOLDER)
     os.makedirs(VIDEO_UPLOAD_FOLDER)
+
+def process_image(image_path):
+    """
+    Processa a imagem e retorna a área calculada.
+    """
+    # Ler imagem
+    img = cv2.imread(image_path)
+
+    # Processar imagem (exemplo simples: converter para escala de cinza e binarizar)
+    n_area = d_computeareaframe.computeArea(img)    
+    # Aplicar um limiar para binarização
+    
+    return n_area
     
 initialize()
 # Página inicial com formulário para upload de vídeo
@@ -56,30 +74,55 @@ def get_video():
     video_filename = 'meu_video.mp4'  # Nome do vídeo a ser recuperado
     return send_from_directory(app.config['VIDEO_UPLOAD_FOLDER'], video_filename)
 
-# Novo endpoint para receber e armazenar os dados do vídeo enviado pela página
+image_counter = 0
+
 @app.route('/save-image', methods=['POST'])
 def save_image():
+    global image_counter  # Usa a variável global para contar as imagens
+
     if 'image' in request.json:
         # Decodifica a imagem base64
         image_data = request.json['image'].split(',')[1].encode()
         
+        # Cria um nome de arquivo sequencial
+        filename = f'image_{image_counter}.png'
+        image_counter += 1  # Incrementa o contador para a próxima imagem
+        
         # Salva a imagem no diretório de uploads
-        with open(os.path.join(app.config['DATA_UPLOAD_FOLDER'], 'selected_area.png'), 'wb') as f:
+        with open(os.path.join(app.config['DATA_UPLOAD_FOLDER'], filename), 'wb') as f:
             f.write(image_data)
         
         return 'Imagem salva com sucesso.', 200
     else:
         return 'Dados da imagem não encontrados.', 400
 
+current_index = app.config['START_INDEX']
+
 
 # Novo endpoint para gerar e retornar um número aleatório 30 vezes por segundo
-@app.route('/random-number')
-def random_number():
-    # Gera um único número aleatório
-    random_num = str(random.random())
-    
-    # Retorna o número aleatório como resposta
-    return random_num
+@app.route('/random-number', methods=['GET'])
+def get_area():
+
+    index = request.args.get('index', type=int)
+
+    if index is None:
+        return 'Parâmetro de índice ausente', 400
+
+    # Formatar o nome do arquivo da imagem com base no índice atual
+    image_filename = f"{app.config['IMAGE_PREFIX']}{index}{app.config['IMAGE_SUFFIX']}"
+    image_path = os.path.join(app.config['DATA_UPLOAD_FOLDER'], image_filename)
+
+    # Verificar se o arquivo existe
+    if not os.path.isfile(image_path):
+        return 'Imagem não encontrada', 404
+
+    # Processar imagem e calcular a área
+    area = str(process_image(image_path))
+
+
+
+    # Retornar a área calculada como uma string simples
+    return area
 
 
 if __name__ == '__main__':
