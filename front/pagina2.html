@@ -105,7 +105,6 @@
     } */
     
 </style>
-<script src="saveSelectedArea.js"></script>
 <script src="fetchDataAndUpdateChart.js"></script>
 <script src="getVideo.js"></script>
 </head>
@@ -150,6 +149,30 @@
     const mask = document.getElementById('mask');
     const selectedArea = document.getElementById('selected-area');
     const selectAreaButton = document.getElementById('select-area-button');
+    const socket = new WebSocket('ws://localhost:8765');
+
+    socket.addEventListener('open', function (event) {
+    console.log('Conectado ao servidor WebSocket');
+});
+
+function saveSelectedArea(counter) {
+    const minX = parseInt(selectedArea.style.left);
+    const minY = parseInt(selectedArea.style.top);
+    const width = parseInt(selectedArea.style.width);
+    const height = parseInt(selectedArea.style.height);
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.drawImage(video, minX, minY, width, height, 0, 0, width, height);
+
+    const imageData = canvas.toDataURL('image/png');
+
+    // Enviar a imagem para o servidor WebSocket
+    socket.send(imageData);
+}
 
     let isSelectingArea = false;
     let startX, startY, endX, endY;video
@@ -258,6 +281,17 @@
     getVideo();
 
 
+    
+
+// Enviar a imagem quando o WebSocket estiver aberto
+
+
+
+
+
+
+
+
     const data = [];
     const dataLimit = 50; // Limite de pontos no gráfico
     let xValue = 0; // Variável para rastrear o valor de x
@@ -316,7 +350,11 @@
         }
     });
     // Adiciona um novo ponto aleatório a cada 33 milissegundos (aproximadamente 30 vezes por segundo)
-   
+    socket.addEventListener('message', function (event) {
+    // Receber o número calculado do servidor
+    const randomNumber = parseFloat(event.data);
+    fetchDataAndUpdateChart(randomNumber);
+});
 </script>
 </body>
 </html>

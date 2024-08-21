@@ -6,6 +6,11 @@ import random
 import time
 import d_computeareaframe
 import cv2
+import asyncio
+import websockets
+import base64
+from io import BytesIO
+import numpy as np
 
 app = Flask(__name__)
 
@@ -76,53 +81,39 @@ def get_video():
 
 image_counter = 0
 
-@app.route('/save-image', methods=['POST'])
-def save_image():
-    global image_counter  # Usa a variável global para contar as imagens
+async def handle_image(websocket, path):
+    global image_counter
 
-    if 'image' in request.json:
-        # Decodifica a imagem base64
-        image_data = request.json['image'].split(',')[1].encode()
-        
+    async for message in websocket:
+        # Decodificar a imagem base64
+        header, encoded = message.split(b',', 1)
+        image_data = base64.b64decode(encoded)
+
+        # Converte os dados da imagem para um array NumPy
+        image_bytes = BytesIO(image_data)
+        img_array = np.frombuffer(image_bytes.read(), np.uint8)
+        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)  # Aqui a imagem é carregada como BGR
+
         # Cria um nome de arquivo sequencial
         filename = f'image_{image_counter}.png'
         image_counter += 1  # Incrementa o contador para a próxima imagem
-        
+
         # Salva a imagem no diretório de uploads
-        with open(os.path.join(app.config['DATA_UPLOAD_FOLDER'], filename), 'wb') as f:
-            f.write(image_data)
-        
-        return 'Imagem salva com sucesso.', 200
-    else:
-        return 'Dados da imagem não encontrados.', 400
+        image_path = os.path.join(DATA_UPLOAD_FOLDER, filename)
+        cv2.imwrite(image_path, img)
 
-current_index = app.config['START_INDEX']
+        # Chama a função d_computeareaframe.computeArea() passando a imagem
+        area = d_computeareaframe.computeArea(img)
 
+        # Converte o resultado para uma string
+        area_str = str(area)
 
-# Novo endpoint para gerar e retornar um número aleatório 30 vezes por segundo
-@app.route('/random-number', methods=['GET'])
-def get_area():
+        # Envia a string de volta ao cliente
+        await websocket.send(area_str)
 
-    index = request.args.get('index', type=int)
-
-    if index is None:
-        return 'Parâmetro de índice ausente', 400
-
-    # Formatar o nome do arquivo da imagem com base no índice atual
-    image_filename = f"{app.config['IMAGE_PREFIX']}{index}{app.config['IMAGE_SUFFIX']}"
-    image_path = os.path.join(app.config['DATA_UPLOAD_FOLDER'], image_filename)
-
-    # Verificar se o arquivo existe
-    if not os.path.isfile(image_path):
-        return 'Imagem não encontrada', 404
-
-    # Processar imagem e calcular a área
-    area = str(process_image(image_path))
-
-
-
-    # Retornar a área calculada como uma string simples
-    return area
+async def main():
+    async with websockets.serve(handle_image, "localhost", 8765):
+        await asyncio.Future()
 
 
 if __name__ == '__main__':

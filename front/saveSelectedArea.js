@@ -13,23 +13,6 @@ function saveSelectedArea(counter) {
 
     const imageData = canvas.toDataURL('image/png');
 
-    fetch('http://localhost:5000/save-image', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image: imageData }),
-    })
-    .then(response => {
-        if (response.ok) {
-            console.log('Imagem enviada com sucesso.');
-            fetchDataAndUpdateChart(counter);
-            counter++;
-        } else {
-            console.error('Erro ao enviar imagem:', response.statusText);
-        }
-    })
-    .catch(error => {
-        console.error('Erro ao enviar imagem:', error);
-    });
+    // Enviar a imagem para o servidor WebSocket
+    socket.send(imageData);
 }
