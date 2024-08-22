@@ -6,6 +6,11 @@ import random
 import time
 import d_computeareaframe
 import cv2
+from PIL import Image
+import numpy as np
+import io
+import base64
+import numpy as np
 
 app = Flask(__name__)
 
@@ -80,21 +85,24 @@ image_counter = 0
 def save_image():
     global image_counter  # Usa a variável global para contar as imagens
 
-    if 'image' in request.json:
-        # Decodifica a imagem base64
-        image_data = request.json['image'].split(',')[1].encode()
-        
-        # Cria um nome de arquivo sequencial
-        filename = f'image_{image_counter}.png'
-        image_counter += 1  # Incrementa o contador para a próxima imagem
-        
-        # Salva a imagem no diretório de uploads
-        with open(os.path.join(app.config['DATA_UPLOAD_FOLDER'], filename), 'wb') as f:
-            f.write(image_data)
-        
-        return 'Imagem salva com sucesso.', 200
-    else:
-        return 'Dados da imagem não encontrados.', 400
+    if 'image' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo de imagem encontrado na solicitação.'}), 400
+    
+    file = request.files['image']
+
+    img = Image.open(file.stream)
+    img = np.array(img)
+
+    # Converte a imagem para o formato BGR
+    img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    filename = f'image_{image_counter}.png'
+    image_counter += 1
+
+    save_path = os.path.join(app.config['DATA_UPLOAD_FOLDER'], filename)
+    cv2.imwrite(save_path, img_bgr)
+
+    return jsonify({"message": "Imagem convertida para BGR com sucesso!"})
 
 current_index = app.config['START_INDEX']
 

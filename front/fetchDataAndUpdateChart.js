@@ -1,7 +1,8 @@
-function fetchDataAndUpdateChart() {
-    numero = 1;
+function fetchDataAndUpdateChart(counter) {
 
-    url =`http://localhost:5000/random-number?index=1`
+numero  = counter;
+
+    url =`http://localhost:5000/random-number?index=${numero}`
     fetch(url)
         .then(response => response.text())
         .then(responseData => {

@@ -1,35 +1,62 @@
-function saveSelectedArea(counter) {
-    const minX = parseInt(selectedArea.style.left);
-    const minY = parseInt(selectedArea.style.top);
-    const width = parseInt(selectedArea.style.width);
-    const height = parseInt(selectedArea.style.height);
+function saveSelectedArea() {
+    const selectedAreaX = parseInt(selectedArea.style.left);
+    const selectedAreaY = parseInt(selectedArea.style.top);
+    const selectedAreaWidth = parseInt(selectedArea.style.width);
+    const selectedAreaHeight = parseInt(selectedArea.style.height);
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = width;
-    canvas.height = height;
+    let video = document.getElementById('video');
+    let canvas = document.createElement('canvas');
+    let ctx = canvas.getContext('2d');
 
-    ctx.drawImage(video, minX, minY, width, height, 0, 0, width, height);
+    canvas.width = selectedAreaWidth;
+    canvas.height = selectedAreaHeight;
 
-    const imageData = canvas.toDataURL('image/png');
+    ctx.drawImage(video,selectedAreaX, selectedAreaY, selectedAreaWidth, selectedAreaHeight, 0 , 0, canvas.width, canvas.height);
 
-    fetch('http://localhost:5000/save-image', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image: imageData }),
+    let blob = canvas.toBlob((blob) => {
+        let fd = new FormData();
+        fd.append('image', blob, 'captura.png');
+        let req = new Request(
+            'http://127.0.0.1:5000/save-image',{
+                method: 'POST',
+                body: fd
+            })
+            fetch(req)
+            .then(response=>response.json())
+            .then(data=>{
+                console.log('imagem upada');
+                fetchDataAndUpdateChart(counter);
+                counter ++;
+            })
+            .catch(err=>{
+                console.log(err.message);
+            });
+        
     })
-    .then(response => {
-        if (response.ok) {
-            console.log('Imagem enviada com sucesso.');
-            fetchDataAndUpdateChart(counter);
-            counter++;
-        } else {
-            console.error('Erro ao enviar imagem:', response.statusText);
-        }
-    })
-    .catch(error => {
-        console.error('Erro ao enviar imagem:', error);
-    });
-}
+}    
+
+    
+
+
+    // croppedCanvas.toBlob(async (blob) => {
+    //     // Cria um FormData para enviar o blob
+    //     const formData = new FormData();
+    //     formData.append('image', blob, 'captura.png');
+
+    //     try {
+    //         // Envia o blob para o servidor
+    //         const response = await fetch('SEU_ENDPOINT_AQUI', {
+    //             method: 'POST',
+    //             body: formData
+    //         });
+
+    //         if (response.ok) {
+    //             console.log('Imagem enviada com sucesso');
+    //         } else {
+    //             console.error('Erro ao enviar imagem:', response.statusText);
+    //         }
+    //     } catch (error) {
+    //         console.error('Erro na requisição:', error);
+    //     }
+    // }, 'image/png');
+
