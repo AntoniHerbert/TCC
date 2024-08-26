@@ -8,7 +8,7 @@ import d_computeareaframe
 import cv2
 from PIL import Image
 import numpy as np
-import io
+from io import BytesIO
 import base64
 import numpy as np
 
@@ -48,10 +48,10 @@ def process_image(image_path):
     img = cv2.imread(image_path)
 
     # Processar imagem (exemplo simples: converter para escala de cinza e binarizar)
-    n_area = d_computeareaframe.computeArea(img)    
+    n_area, imagem = d_computeareaframe.computeArea(img)    
     # Aplicar um limiar para binarização
     
-    return n_area
+    return n_area, imagem
     
 initialize()
 # Página inicial com formulário para upload de vídeo
@@ -125,12 +125,23 @@ def get_area():
         return 'Imagem não encontrada', 404
 
     # Processar imagem e calcular a área
-    area = str(process_image(image_path))
+    area, foto = process_image(image_path)
 
+    if not isinstance(foto, np.ndarray):
+        return 'Erro ao processar a imagem', 500
 
+    # Converter a imagem NumPy para PIL.Image
+    img_pil = Image.fromarray(foto)
+
+    buffered = BytesIO()
+    img_pil.save(buffered, format="png")  # Supondo que a imagem seja em formato JPEG
+    foto_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     # Retornar a área calculada como uma string simples
-    return area
+    return jsonify({
+        'numero': str(area),
+        'image': f"data:image/jpeg;base64,{foto_base64}"
+    })
 
 
 if __name__ == '__main__':

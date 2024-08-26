@@ -13,14 +13,12 @@
     grid-template-columns: repeat(1, 1fr);
     align-items: start;
     justify-items: center;
-    gap: 7.5%; /* Distância entre os elementos */
+    gap: 7.5%; 
 }
     .container{
         display: flex;
         flex-direction: row;
         height: 100vh;
-        /* margin: 0 auto; */
-        /* align-items: center; */
         justify-content: center;
         gap: 10vw;
 
@@ -32,23 +30,24 @@
         width: 35vw;
         top: 10vh;
         overflow: visible;
-
-        /* width: 35%; Largura do vídeo
-        aspect-ratio: 9/16; Altura do vídeo
-        overflow: hidden;
-        grid-row: 1/2; */
     }
 
     
     .myChart {
-        position: relative;
+        /* position: relative; */
         width: 40vw;
         height: 60vh;
-        top: 10vh;
+        bottom: 0vh;
         /* position:fixed; */
 
          /* Fundo preto com 80% de transparência */
         overflow: visible;
+        display: flex;
+        position: relative;
+        
+
+        /* align-self: flex-end; */
+
         /* grid-row: 2/3; */
     }
 
@@ -56,11 +55,22 @@
         position: relative;
         width: 40vw;
         height: 60vh;
+        align-self: flex-end;
+
+        
+        bottom: 0vh;
+
         /* position:fixed; */
 
         background-color: rgba(0, 0, 0, 0.4); /* Fundo preto com 80% de transparência */
         overflow: visible;
         /* grid-row: 2/3; */
+    }
+
+    .tamanho_canvas{
+        height: 50vh;
+        height: 50vh;
+
     }
 
     #video {
@@ -99,11 +109,44 @@
         background-color: rgba(0, 0, 0, 0); /* Transparente */
         pointer-events: none; /* A área selecionada não deve responder aos eventos do mouse */
     }
-   #select-area-button{
+    #select-area-button{
     position: absolute;
-        top: 80%;
+        top: 10%;
         right: 10vw;
+        width: 160px;
+        display: none;
+
         
+   } 
+   #container-image, #image{
+    width: 20vw;
+    height: 30vh;
+   }
+
+   .conteudo{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 80vh;
+    width: 40vw;
+    top: 10vh;
+    overflow: visible;
+   }
+
+   #captura-switch{
+    position: absolute;
+    top: 20%;
+    right: 10vw;
+    width: 160px;
+    display: none;
+   }
+
+   #capturar-button{
+    position: absolute;
+    top: 30%;
+    right: 10vw;
+    width: 160px;
+    display: none;
    }
 
     /* button{
@@ -121,7 +164,7 @@
 <body>
     <div class="container">
          <div class="video-container" >
-            <video id="video" ></video>
+            <video id="video"></video>
             <div class="mask" id="mask">
                 <div class="top"></div>
                 <div class="bottom"></div>
@@ -131,10 +174,25 @@
             </div>
             <div class="selected-area" id="selected-area"></div>
         </div>
-        <div class="myChart">
-        <canvas id="myChart"></canvas> 
+        <div class="conteudo">
+            
+
+            
+            <div id="container-image">
+                <canvas id="image" style="position: relative;"></canvas>
+            </div>
+            
+            <div class="myChart">
+            <canvas id="myChart"></canvas> 
+            </div>
+            
+            
+            
+
         </div>
         <button id="select-area-button">Selecionar Área</button>
+        <button id="captura-switch"></button>
+        <button id="capturar-button">capturar</button>
 
 
          <!-- <div class="grafico">grafico</div> -->
@@ -158,14 +216,27 @@
     const mask = document.getElementById('mask');
     const selectedArea = document.getElementById('selected-area');
     const selectAreaButton = document.getElementById('select-area-button');
+    const image = document.getElementById('image');
+    const capturaSwitch = document.getElementById('captura-switch');
+    const capturarButton = document.getElementById('capturar-button');
 
     let isSelectingArea = false;
     let startX, startY, endX, endY;video
     let counter = 0;
     let saveInterval;
+    let isCapturaAutomatica = true;
 
     video.addEventListener('loadeddata', () => {
         document.querySelector('.mask .top').style.display = 'block';
+        selectAreaButton.style.display = 'block';
+        capturaSwitch.style.display = 'block';
+        if(isCapturaAutomatica == false){
+            capturarButton.style.display = 'block';
+            capturaSwitch.textContent = 'captura automatica';
+        }else {
+            capturaSwitch.textContent = 'Captura manual';
+        }
+        
 });
 
     function onMouseDown(e) {42.5
@@ -173,7 +244,11 @@
             startX = e.clientX - mask.getBoundingClientRect().left; // Ajusta para o posicionamento relativo à máscara
             startY = e.clientY - mask.getBoundingClientRect().top; // Ajusta para o posicionamento relativo à máscara
             document.addEventListener('mousemove', onMouseMove);
-            saveInterval = setInterval(() => saveSelectedArea(), 33);        }
+            if (isCapturaAutomatica) {
+            if (saveInterval) clearInterval(saveInterval); // Evita múltiplos intervalos
+            saveInterval = setInterval(() => saveSelectedArea(), 3000);
+        }
+           }
     }video
 
     function onMouseMove(e) {
@@ -218,6 +293,7 @@
     }
 
     selectAreaButton.addEventListener('click', () => {
+        video.play();
         isSelectingArea = !isSelectingArea;
         if (isSelectingArea) {
             mask.style.pointerEvents = 'auto';
@@ -234,7 +310,6 @@
     window.addEventListener('resize', () => {
     const rect = mask.getBoundingClientRect();
 
-    // Atualiza a posição da área selecionada
     const minX = Math.min(startX, endX);
     const minY = Math.min(startY, endY);
     const maxX = Math.max(startX, endX);
@@ -245,7 +320,6 @@
     selectedArea.style.width = (maxX - minX) + 'px';
     selectedArea.style.height = (maxY - minY) + 'px';
 
-    // Atualiza a posição e o tamanho dos paralelogramos
     mask.querySelector('.top').style.height = minY + 'px';
     mask.querySelector('.top').style.width = '100%';
     mask.querySelector('.top').style.left = '0';
@@ -262,6 +336,26 @@
     mask.querySelector('.right').style.left = maxX + 'px';
     mask.querySelector('.right').style.width = (mask.clientWidth - maxX) + 'px';
 });
+
+capturaSwitch.addEventListener('click', () => {
+    isCapturaAutomatica = !isCapturaAutomatica;
+        if (isCapturaAutomatica == true) {
+            capturaSwitch.textContent = 'Captura manual';
+           capturarButton.style.display = 'none';
+           saveInterval = setInterval(() => saveSelectedArea(), 3000); // Reinicia o setInterval
+           // Desativa a captura automática quando desativada
+        }
+        if (isCapturaAutomatica == false) {
+            capturaSwitch.textContent = 'captura automatica';
+           capturarButton.style.display = 'block';
+           clearInterval(saveInterval);         }
+           
+
+    });
+
+    capturarButton.addEventListener('click', () => {
+        saveSelectedArea(); // Captura uma única vez quando o botão "capturar" é pressionado
+    });
 
 
     

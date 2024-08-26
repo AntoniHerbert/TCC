@@ -81,7 +81,7 @@ def computeArea(img):
   nwhite = np.sum(thresh == 255)
   nblack = np.sum(thresh == 0)
 
-  return nwhite
+  return nwhite, thresh
 
 
 
