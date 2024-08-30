@@ -1,17 +1,37 @@
 function saveSelectedArea() {
-    const selectedAreaX = parseInt(selectedArea.style.left);
-    const selectedAreaY = parseInt(selectedArea.style.top);
-    const selectedAreaWidth = parseInt(selectedArea.style.width);
-    const selectedAreaHeight = parseInt(selectedArea.style.height);
+
+    // Altura do vídeo na tela
+
+    // Calcula a proporção entre o vídeo real e o vídeo exibido
+    
+
+    const selectedAreaX = cropArea.offsetLeft;
+    const selectedAreaY = cropArea.offsetTop;
+    const selectedAreaWidth = cropArea.offsetWidth;
+    const selectedAreaHeight = cropArea.offsetHeight;
+
+    
 
     let video = document.getElementById('video');
-    let canvas = document.createElement('canvas');
     let ctx = canvas.getContext('2d');
+
+    const videoWidth = video.videoWidth;  // Largura real do vídeo
+    const videoHeight = video.videoHeight; // Altura real do vídeo
+    const displayWidth = video.offsetWidth; // Largura do vídeo na tela
+    const displayHeight = video.offsetHeight; 
+    
+    const scaleX = videoWidth / displayWidth;
+    const scaleY = videoHeight / displayHeight;
+
+    const scaledX = selectedAreaX * scaleX;
+    const scaledY = selectedAreaY * scaleY;
+    const scaledWidth = selectedAreaWidth * scaleX;
+    const scaledHeight = selectedAreaHeight * scaleY;
 
     canvas.width = selectedAreaWidth;
     canvas.height = selectedAreaHeight;
 
-    ctx.drawImage(video,selectedAreaX, selectedAreaY, selectedAreaWidth, selectedAreaHeight, 0 , 0, canvas.width, canvas.height);
+    ctx.drawImage(video,scaledX, scaledY, scaledWidth, scaledHeight, 0 , 0, canvas.width, canvas.height);
 
     let blob = canvas.toBlob((blob) => {
         let fd = new FormData();

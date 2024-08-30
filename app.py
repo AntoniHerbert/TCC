@@ -80,6 +80,7 @@ def get_video():
     return send_from_directory(app.config['VIDEO_UPLOAD_FOLDER'], video_filename)
 
 image_counter = 0
+area_all_images = []
 
 @app.route('/save-image', methods=['POST'])
 def save_image():
@@ -127,6 +128,8 @@ def get_area():
     # Processar imagem e calcular a área
     area, foto = process_image(image_path)
 
+    area_all_images.append(area)
+
     if not isinstance(foto, np.ndarray):
         return 'Erro ao processar a imagem', 500
 
@@ -136,6 +139,7 @@ def get_area():
     buffered = BytesIO()
     img_pil.save(buffered, format="png")  # Supondo que a imagem seja em formato JPEG
     foto_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+    print(area_all_images)
 
     # Retornar a área calculada como uma string simples
     return jsonify({

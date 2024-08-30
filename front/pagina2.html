@@ -29,7 +29,7 @@
         height: 80vh;
         width: 35vw;
         top: 10vh;
-        overflow: visible;
+        overflow:visible;
     }
 
     
@@ -79,7 +79,7 @@
         left: 0;
         width: 100%; /* Ajuste para ocupar todo o contêiner */
         height: 100%; /* Ajuste para ocupar todo o contêiner */
-        object-fit:cover; /* Garante que o vídeo ocupe todo o espaço disponível */
+        object-fit:contain; /* Garante que o vídeo ocupe todo o espaço disponível */
     }
 
     .mask {
@@ -121,6 +121,7 @@
    #container-image, #image{
     width: 20vw;
     height: 30vh;
+    overflow: visible;
    }
 
    .conteudo{
@@ -149,6 +150,35 @@
     display: none;
    }
 
+   #crop-area {
+            border: 2px dashed #333;
+            position: absolute;
+            cursor: move;
+            z-index: 2;
+            display: none;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+            pointer-events: none;
+        }
+        #toggle-crop-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 3; /* Acima do overlay e do vídeo */
+}
+
+#toggle-crop-btn.hidden {
+    display: none;
+}
+
     /* button{
         position: absolute;
         top: 80%;
@@ -164,15 +194,10 @@
 <body>
     <div class="container">
          <div class="video-container" >
-            <video id="video"></video>
-            <div class="mask" id="mask">
-                <div class="top"></div>
-                <div class="bottom"></div>
-                <div class="left"></div>
-                <div class="right"></div>
-                
-            </div>
-            <div class="selected-area" id="selected-area"></div>
+            <video id="video" controls></video>
+            <div id="overlay"></div>
+            <div id="crop-area"></div>
+            <canvas id="canvas" style="display: none;"></canvas>
         </div>
         <div class="conteudo">
             
@@ -213,21 +238,23 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const video = document.getElementById('video');
-    const mask = document.getElementById('mask');
-    const selectedArea = document.getElementById('selected-area');
+    const cropArea = document.getElementById('crop-area');
+    const overlay = document.getElementById('overlay');
     const selectAreaButton = document.getElementById('select-area-button');
     const image = document.getElementById('image');
     const capturaSwitch = document.getElementById('captura-switch');
     const capturarButton = document.getElementById('capturar-button');
+    const canvas = document.getElementById('canvas');
+
+    let isDragging = false;
 
     let isSelectingArea = false;
-    let startX, startY, endX, endY;video
+    let startX = 0, startY = 0, endX = 0, endY = 0;
     let counter = 0;
     let saveInterval;
     let isCapturaAutomatica = true;
 
     video.addEventListener('loadeddata', () => {
-        document.querySelector('.mask .top').style.display = 'block';
         selectAreaButton.style.display = 'block';
         capturaSwitch.style.display = 'block';
         if(isCapturaAutomatica == false){
@@ -239,103 +266,64 @@
         
 });
 
-    function onMouseDown(e) {42.5
-        if (isSelectingArea) {
-            startX = e.clientX - mask.getBoundingClientRect().left; // Ajusta para o posicionamento relativo à máscara
-            startY = e.clientY - mask.getBoundingClientRect().top; // Ajusta para o posicionamento relativo à máscara
+video.addEventListener('mousedown', (e) => {
+        if (!isSelectingArea) return;
+        isDragging = true;
+        const rect = video.getBoundingClientRect();
+
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+
+        cropArea.style.left = `${startX}px`;
+        cropArea.style.top = `${startY}px`;
+        cropArea.style.width = `0px`;
+        cropArea.style.height = `0px`;
+        cropArea.style.display = 'block';
+        
             document.addEventListener('mousemove', onMouseMove);
             if (isCapturaAutomatica) {
             if (saveInterval) clearInterval(saveInterval); // Evita múltiplos intervalos
             saveInterval = setInterval(() => saveSelectedArea(), 3000);
         }
-           }
-    }video
+           
+});
 
     function onMouseMove(e) {
-        endX = e.clientX - mask.getBoundingClientRect().left; // Ajusta para o posicionamento relativo à máscara
-        endY = e.clientY - mask.getBoundingClientRect().top; // Ajusta para o posicionamento relativo à máscara
+        if (!isDragging) return;
 
-        const minX = Math.min(startX, endX);
-        const minY = Math.min(startY, endY);
-        const maxX = Math.max(startX, endX);
-        const maxY = Math.max(startY, endY);
+    const rect = video.getBoundingClientRect();
+    
+    endX = e.clientX - rect.left;
+    endY = e.clientY - rect.top;
 
-        selectedArea.style.left = minX + 'px';
-        selectedArea.style.top = minY + 'px';
-        selectedArea.style.width = (maxX - minX) + 'px';
-        selectedArea.style.height = (maxY - minY) + 'px';
-        
-        // Atualiza a posição e o tamanho dos paralelogramos
-        mask.querySelector('.top').style.height = minY + 'px';
-        mask.querySelector('.top').style.width = '100%';
-        mask.querySelector('.top').style.left = '0';
-        mask.querySelector('.bottom').style.top = maxY + 'px';
-        mask.querySelector('.bottom').style.height = (mask.clientHeight - maxY) + 'px';
-        mask.querySelector('.bottom').style.width = '100%';
-        mask.querySelector('.bottom').style.left = '0';
-        mask.querySelector('.left').style.top = minY + 'px';
-        mask.querySelector('.left').style.bottom = (mask.clientHeight - maxY) + 'px';
-        mask.querySelector('.left').style.width = minX + 'px';
-        mask.querySelector('.left').style.left = '0';
-        mask.querySelector('.right').style.top = minY + 'px';
-        mask.querySelector('.right').style.bottom = (mask.clientHeight - maxY) + 'px';
-        mask.querySelector('.right').style.left = maxX + 'px';
-        mask.querySelector('.right').style.width = (mask.clientWidth - maxX) + 'px';
+    const width = endX - startX;
+    const height = endY - startY;
+
+    cropArea.style.width = `${Math.abs(width)}px`;
+    cropArea.style.height = `${Math.abs(height)}px`;
+
+    cropArea.style.left = `${width < 0 ? startX + width : startX}px`;
+    cropArea.style.top = `${height < 0 ? startY + height : startY}px`;
+
+    updateOverlay();
     }
 
-    function onMouseUp() {
-        document.removeEventListener('mousemove', onMouseMove);
-        if (isSelectingArea) {
-            mask.style.pointerEvents = 'none';
-            selectAreaButton.style.display = 'block';
-            isSelectingArea = false;
-        }
+    document.addEventListener('mouseup', () => {        document.removeEventListener('mousemove', onMouseMove);
+        if (isDragging) {
+        isDragging = false;
+        selectAreaButton.classList.remove('hidden');
+        isSelectingArea = false;
     }
+    });
 
     selectAreaButton.addEventListener('click', () => {
         video.play();
         isSelectingArea = !isSelectingArea;
         if (isSelectingArea) {
-            mask.style.pointerEvents = 'auto';
-            selectAreaButton.style.display = 'none';
+            selectAreaButton.classList.add('hidden');
         } else {
-            mask.style.pointerEvents = 'none';
-            selectAreaButton.style.display = 'block';
-        }
+            selectAreaButton.classList.remove('hidden');        }
     });
-
-    mask.addEventListener('mousedown', onMouseDown);
-    mask.addEventListener('mouseup', onMouseUp);
-
-    window.addEventListener('resize', () => {
-    const rect = mask.getBoundingClientRect();
-
-    const minX = Math.min(startX, endX);
-    const minY = Math.min(startY, endY);
-    const maxX = Math.max(startX, endX);
-    const maxY = Math.max(startY, endY);
-
-    selectedArea.style.left = minX + 'px';
-    selectedArea.style.top = minY + 'px';
-    selectedArea.style.width = (maxX - minX) + 'px';
-    selectedArea.style.height = (maxY - minY) + 'px';
-
-    mask.querySelector('.top').style.height = minY + 'px';
-    mask.querySelector('.top').style.width = '100%';
-    mask.querySelector('.top').style.left = '0';
-    mask.querySelector('.bottom').style.top = maxY + 'px';
-    mask.querySelector('.bottom').style.height = (mask.clientHeight - maxY) + 'px';
-    mask.querySelector('.bottom').style.width = '100%';
-    mask.querySelector('.bottom').style.left = '0';
-    mask.querySelector('.left').style.top = minY + 'px';
-    mask.querySelector('.left').style.bottom = (mask.clientHeight - maxY) + 'px';
-    mask.querySelector('.left').style.width = minX + 'px';
-    mask.querySelector('.left').style.left = '0';
-    mask.querySelector('.right').style.top = minY + 'px';
-    mask.querySelector('.right').style.bottom = (mask.clientHeight - maxY) + 'px';
-    mask.querySelector('.right').style.left = maxX + 'px';
-    mask.querySelector('.right').style.width = (mask.clientWidth - maxX) + 'px';
-});
 
 capturaSwitch.addEventListener('click', () => {
     isCapturaAutomatica = !isCapturaAutomatica;
@@ -356,6 +344,62 @@ capturaSwitch.addEventListener('click', () => {
     capturarButton.addEventListener('click', () => {
         saveSelectedArea(); // Captura uma única vez quando o botão "capturar" é pressionado
     });
+
+    function updateOverlay() {
+    const cropX = cropArea.offsetLeft;
+    const cropY = cropArea.offsetTop;
+    const cropWidth = cropArea.offsetWidth;
+    const cropHeight = cropArea.offsetHeight;
+
+    // Definir os pontos do polígono para o clip-path
+    const points = [
+        `0% 0%`, // canto superior esquerdo do vídeo
+        `${cropX}px ${cropY}px`, // canto superior esquerdo do crop
+        
+        `${cropX + cropWidth}px ${cropY}px`, // canto superior direito do crop
+        `100% 0%`, // canto superior direito do vídeo
+        `0% 0%`, // canto superior esquerdo do vídeo
+
+        `${cropX}px ${cropY}px`, // canto superior esquerdo do crop
+
+        `${cropX}px ${cropY + cropHeight}px`, // canto inferior esquerdo do crop
+
+        `0% 100%`, // canto inferior esquerdo do vídeo
+
+        `0% 0%`, // canto superior esquerdo do vídeo
+
+        `${cropX}px ${cropY + cropHeight}px`, // canto inferior esquerdo do crop
+
+        `${cropX + cropWidth}px ${cropY + cropHeight}px`, // canto inferior direito do crop
+
+        `100% 100%`, // canto inferior direito do vídeo
+        
+        `0% 100%`, // canto inferior esquerdo do vídeo
+
+        `${cropX}px ${cropY + cropHeight}px`, // canto inferior esquerdo do crop
+
+        `100% 100%`, // canto inferior direito do vídeo
+
+        `100% 0%`, // canto superior direito do vídeo
+
+        `${cropX + cropWidth}px ${cropY}px`, // canto superior direito do crop
+
+        `${cropX + cropWidth}px ${cropY + cropHeight}px`, // canto inferior direito do crop
+
+        `100% 100%`, // canto inferior direito do vídeo
+
+        `0% 100%`, // canto inferior esquerdo do vídeo
+
+        `0% 0%`, // canto superior esquerdo do vídeo
+
+
+    ];
+
+    // Adicionar o ponto de volta ao início do polígono para fechar a forma
+    points.push(`0% 0%`);
+
+    overlay.style.clipPath = `polygon(${points.join(', ')})`;
+}
 
 
     
