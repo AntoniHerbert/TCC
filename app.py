@@ -12,7 +12,7 @@ from io import BytesIO
 import base64
 import numpy as np
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='front', static_folder='front', static_url_path='')
 
 
 
@@ -146,6 +146,20 @@ def get_area():
         'numero': str(area),
         'image': f"data:image/jpeg;base64,{foto_base64}"
     })
+
+@app.route('/pagina1')
+def pagina1():
+    # Isso vai buscar o arquivo dentro da pasta 'front'
+    return render_template('pagina1.html')
+
+@app.route('/pagina3')
+def pagina3():
+    return render_template('pagina3.html')
+
+# Se quiser que a pagina1 seja a principal (home):
+@app.route('/pagina2') 
+def pagina2():
+    return render_template('pagina2.html')
 
 
 if __name__ == '__main__':

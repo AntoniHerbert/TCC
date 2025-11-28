@@ -37,7 +37,7 @@ function saveSelectedArea() {
         let fd = new FormData();
         fd.append('image', blob, 'captura.png');
         let req = new Request(
-            'http://127.0.0.1:5000/save-image',{
+            '/save-image',{
                 method: 'POST',
                 body: fd
             })
